@@ -22,18 +22,9 @@ class Person:
     age: int
     city: str
     @strawberry.field
-    async def works_at(self) -> Optional[Company]:
-        async with driver.session(database=NEO4J_DATABASE) as session:
-            result = await session.run(
-                """
-                MATCH (p:Person {id: $id})-[:WORKS_AT]->(c:Company)
-                RETURN c.id AS id, c.name AS name
-                """,
-                id=self.id
-            )
-            record = await result.single()
-            return Company(**record) if record else None
-
+    async def works_at(self, info) -> Optional["Company"]:
+        data = await info.context["company_loader"].load(self.id)
+        return Company(**data) if data else None
 # -------------------
 # Query (READ)
 # -------------------
